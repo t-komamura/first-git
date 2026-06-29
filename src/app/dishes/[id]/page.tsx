@@ -87,13 +87,15 @@ export default function DishDetailPage() {
           )}
         </div>
 
-        <Link
-          href={`/dishes/${id}/variations/new`}
-          className="mt-4 block text-center border-2 border-dashed rounded-2xl py-4 font-semibold"
-          style={{ borderColor: '#FBD9BD', color: '#C2410C' }}
-        >
-          ＋ バリエーションを追加
-        </Link>
+        {dish.variations.length > 0 && (
+          <Link
+            href={`/dishes/${id}/variations/new`}
+            className="mt-4 block text-center border-2 border-dashed rounded-2xl py-4 font-semibold"
+            style={{ borderColor: '#FBD9BD', color: '#C2410C' }}
+          >
+            ＋ バリエーションを追加
+          </Link>
+        )}
       </div>
     </main>
   )

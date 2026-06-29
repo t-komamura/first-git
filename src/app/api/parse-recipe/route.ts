@@ -7,6 +7,10 @@ export const maxDuration = 30
 
 const CATEGORIES = ['鍋', 'パスタ', '肉料理', '魚料理', 'サラダ', '麺類', '炒め物', 'スープ・汁物', 'ご飯もの', 'おつまみ', 'スイーツ']
 
+const genAI = process.env.GOOGLE_AI_API_KEY
+  ? new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY)
+  : null
+
 const dishAiSchema = z.object({
   title: z.string().optional().default(''),
   category: z.string().optional().default(''),
@@ -40,12 +44,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `テキストが長すぎます（最大${PARSE_TEXT_MAX}文字）` }, { status: 400 })
   }
 
-  const apiKey = process.env.GOOGLE_AI_API_KEY
-  if (!apiKey) {
+  if (!genAI) {
     return NextResponse.json({ error: 'GOOGLE_AI_API_KEY is not set' }, { status: 500 })
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey)
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
   // mode: 'dish'（親料理）か 'variation'（バリエーション）

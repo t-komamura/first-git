@@ -40,7 +40,7 @@ export default function Fab() {
       >
         ＋
       </button>
-      {open && <div className="fixed inset-0 -z-10" onClick={() => setOpen(false)} />}
+      {open && <div className="fixed inset-0 -z-10 bg-black/20" onClick={() => setOpen(false)} />}
     </div>
   )
 }

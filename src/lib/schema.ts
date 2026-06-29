@@ -16,7 +16,9 @@ export const dishes = pgTable('dishes', {
   title: text('title').notNull(),
   category: text('category'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-})
+}, (t) => [
+  index('dishes_category_idx').on(t.category),
+])
 
 export const variations = pgTable('variations', {
   id: uuid('id').defaultRandom().primaryKey(),

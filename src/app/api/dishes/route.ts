@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { dishes, variations } from '@/lib/schema'
 import { dishCreateSchema } from '@/lib/validation'
-import { desc, ilike, or, eq, sql } from 'drizzle-orm'
+import { desc, ilike, or, eq, sql, and } from 'drizzle-orm'
 
 // GET /api/dishes?q=...&category=...
 // 親料理一覧。各料理のバリエーション数とベスト評価を含める。
@@ -18,23 +18,25 @@ export async function GET(req: NextRequest) {
       category: dishes.category,
       createdAt: dishes.createdAt,
       variationCount: sql<number>`count(${variations.id})::int`,
-      bestRating: sql<number | null>`max(${variations.rating})`,
+      bestRating: sql<number | null>`max(${variations.rating})::int`,
     })
     .from(dishes)
     .leftJoin(variations, eq(variations.dishId, dishes.id))
     .where(
-      q
-        ? or(
-            ilike(dishes.title, `%${q}%`),
-            sql`exists (select 1 from ${variations} v where v.dish_id = ${dishes.id} and exists (select 1 from json_array_elements(v.ingredients) e where e->>'name' ilike ${'%' + q + '%'}))`
-          )
-        : undefined
+      and(
+        category ? eq(dishes.category, category) : undefined,
+        q
+          ? or(
+              ilike(dishes.title, `%${q}%`),
+              sql`exists (select 1 from ${variations} v where v.dish_id = ${dishes.id} and exists (select 1 from json_array_elements(v.ingredients) e where e->>'name' ilike ${'%' + q + '%'}))`
+            )
+          : undefined
+      )
     )
     .groupBy(dishes.id)
     .orderBy(sql`max(${variations.rating}) DESC NULLS LAST`, desc(dishes.createdAt))
 
-  const filtered = category ? rows.filter(r => r.category === category) : rows
-  return NextResponse.json(filtered)
+  return NextResponse.json(rows)
 }
 
 // POST /api/dishes

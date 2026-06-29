@@ -25,7 +25,7 @@ export function IngredientEditor({ value, onChange }: { value: Ingredient[]; onC
               className="w-28 border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
             {value.length > 1 && (
-              <button type="button" onClick={() => onChange(value.filter((_, idx) => idx !== i))} className="text-gray-400 hover:text-red-400 text-xl leading-none w-6">×</button>
+              <button type="button" onClick={() => onChange(value.filter((_, idx) => idx !== i))} className="w-10 h-10 flex items-center justify-center rounded-full text-gray-400 hover:text-red-400 text-xl shrink-0">×</button>
             )}
           </div>
         ))}
@@ -57,7 +57,7 @@ export function StepEditor({ value, onChange }: { value: Step[]; onChange: (v: S
               className="flex-1 border rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
             {value.length > 1 && (
-              <button type="button" onClick={() => remove(i)} className="mt-2 text-gray-400 hover:text-red-400 text-xl leading-none w-6">×</button>
+              <button type="button" onClick={() => remove(i)} className="w-10 h-10 flex items-center justify-center rounded-full text-gray-400 hover:text-red-400 text-xl shrink-0">×</button>
             )}
           </div>
         ))}
