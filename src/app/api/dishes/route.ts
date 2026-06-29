@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         : undefined
     )
     .groupBy(dishes.id)
-    .orderBy(desc(sql`max(${variations.rating})`), desc(dishes.createdAt))
+    .orderBy(sql`max(${variations.rating}) DESC NULLS LAST`, desc(dishes.createdAt))
 
   const filtered = category ? rows.filter(r => r.category === category) : rows
   return NextResponse.json(filtered)
@@ -39,7 +39,8 @@ export async function GET(req: NextRequest) {
 
 // POST /api/dishes
 export async function POST(req: NextRequest) {
-  const body = await req.json()
+  let body: unknown
+  try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
   const parsed = dishCreateSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })

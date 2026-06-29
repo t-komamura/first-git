@@ -63,13 +63,13 @@ export default function Home() {
           </div>
         ) : dishes.length === 0 ? (
           filtering ? (
-            <div className="text-center py-20 text-gray-400">
+            <div className="text-center py-20 text-gray-500">
               <div className="text-5xl mb-4">🔍</div>
               <p>条件に合う料理が見つかりません</p>
               <button onClick={() => { setQ(''); setCategory('') }} className="mt-4 font-semibold" style={{ color: '#C2410C' }}>絞り込みをクリア</button>
             </div>
           ) : (
-            <div className="text-center py-20 text-gray-400">
+            <div className="text-center py-20 text-gray-500">
               <div className="text-6xl mb-4">🍽️</div>
               <p>まだ料理がありません</p>
               <Link href="/dishes/new" className="mt-4 inline-block font-semibold" style={{ color: '#C2410C' }}>最初の料理を追加する →</Link>

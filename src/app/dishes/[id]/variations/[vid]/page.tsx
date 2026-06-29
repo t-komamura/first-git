@@ -16,9 +16,12 @@ export default function VariationDetailPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/dishes/${id}/variations/${vid}`).then(r => r.json()),
-      fetch(`/api/dishes/${id}`).then(r => r.json()),
-    ]).then(([v, d]) => { setVariation(v); setDish(d); setLoading(false) })
+      fetch(`/api/dishes/${id}/variations/${vid}`).then(r => { if (!r.ok) throw new Error(); return r.json() }),
+      fetch(`/api/dishes/${id}`).then(r => { if (!r.ok) throw new Error(); return r.json() }),
+    ])
+      .then(([v, d]) => { setVariation(v); setDish(d) })
+      .catch(() => { setVariation(null); setDish(null) })
+      .finally(() => setLoading(false))
   }, [id, vid])
 
   async function handleDelete() {
@@ -29,7 +32,12 @@ export default function VariationDetailPage() {
   }
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400" style={{ backgroundColor: '#FFF8F0' }}>読み込み中...</div>
-  if (!variation || 'error' in variation) return <div className="min-h-screen flex items-center justify-center text-gray-400" style={{ backgroundColor: '#FFF8F0' }}>見つかりませんでした</div>
+  if (!variation) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3" style={{ backgroundColor: '#FFF8F0' }}>
+      <p className="text-gray-500">見つかりませんでした</p>
+      <Link href={`/dishes/${id}`} style={{ color: '#C2410C' }} className="font-semibold">← 料理詳細に戻る</Link>
+    </div>
+  )
 
   const rank = dish?.variations?.findIndex(v => v.id === vid)
   const rankLabel = rank !== undefined && rank >= 0 ? ` #${rank + 1}位` : ''
@@ -38,31 +46,31 @@ export default function VariationDetailPage() {
     <main className="min-h-screen" style={{ backgroundColor: '#FFF8F0' }}>
       <div className="max-w-2xl mx-auto px-4 pt-6" style={{ paddingBottom: 96 }}>
         {/* パンくず */}
-        <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
+        <div className="flex items-center gap-2 text-sm mb-3">
           <Link href={`/dishes/${id}`} style={{ color: '#C2410C' }}>← {dish?.title}</Link>
-          <span>›</span>
+          <span className="text-gray-400">›</span>
           <span className="text-gray-500">{variation.name}{rankLabel}</span>
         </div>
 
         <div className="flex items-start justify-between gap-2">
           <h1 className="text-2xl font-bold text-gray-800 break-words">{variation.name}</h1>
           <div className="flex gap-2 shrink-0">
-            <Link href={`/dishes/${id}/variations/${vid}/edit`} className="text-sm text-gray-500 border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-100">編集</Link>
-            <button onClick={handleDelete} className="text-sm text-red-400 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50">削除</button>
+            <Link href={`/dishes/${id}/variations/${vid}/edit`} className="text-sm text-gray-500 border border-gray-300 px-3 py-2.5 rounded-lg hover:bg-gray-100">編集</Link>
+            <button onClick={handleDelete} className="text-sm text-red-400 border border-red-200 px-3 py-2.5 rounded-lg hover:bg-red-50">削除</button>
           </div>
         </div>
 
         <div className="flex items-center gap-3 mt-2">
           <StarRating value={variation.rating ?? 0} readonly size="sm" />
           {variation.lastCookedAt && (
-            <span className="text-sm text-gray-400">最終: {new Date(variation.lastCookedAt).toLocaleDateString('ja-JP')}</span>
+            <span className="text-sm text-gray-500">最終: {new Date(variation.lastCookedAt).toLocaleDateString('ja-JP')}</span>
           )}
         </div>
 
         <div className="bg-white rounded-2xl p-4 mt-5">
           <h2 className="font-bold text-gray-800 mb-3">食材・分量</h2>
           {variation.ingredients.length === 0 ? (
-            <p className="text-sm text-gray-400">未登録</p>
+            <p className="text-sm text-gray-500">未登録</p>
           ) : (
             <ul className="space-y-2">
               {variation.ingredients.map((ing, i) => (
@@ -78,7 +86,7 @@ export default function VariationDetailPage() {
         <div className="bg-white rounded-2xl p-4 mt-4">
           <h2 className="font-bold text-gray-800 mb-3">作り方</h2>
           {variation.steps.length === 0 ? (
-            <p className="text-sm text-gray-400">未登録</p>
+            <p className="text-sm text-gray-500">未登録</p>
           ) : (
             <ol className="space-y-4">
               {variation.steps.map((step, i) => (
@@ -91,12 +99,15 @@ export default function VariationDetailPage() {
           )}
         </div>
 
-        {/* メモ: 折りたたみ */}
+        {/* メモ: 折りたたみ（開閉トグル） */}
         {variation.memo && (
           <div className="mt-4">
             {showMemo ? (
               <div className="bg-white rounded-2xl p-4 transition-all duration-300 ease-out">
-                <h2 className="font-bold text-gray-800 mb-2">メモ・コツ</h2>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="font-bold text-gray-800">メモ・コツ</h2>
+                  <button onClick={() => setShowMemo(false)} className="text-sm font-semibold" style={{ color: '#C2410C' }}>∧ 閉じる</button>
+                </div>
                 <p className="text-sm text-gray-600 whitespace-pre-wrap">{variation.memo}</p>
               </div>
             ) : (

@@ -1,13 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { PARSE_TEXT_MAX } from '@/lib/validation'
+import { z } from 'zod'
+import { PARSE_TEXT_MAX, ingredientSchema, stepSchema } from '@/lib/validation'
 
 export const maxDuration = 30
 
 const CATEGORIES = ['鍋', 'パスタ', '肉料理', '魚料理', 'サラダ', '麺類', '炒め物', 'スープ・汁物', 'ご飯もの', 'おつまみ', 'スイーツ']
 
+const dishAiSchema = z.object({
+  title: z.string().optional().default(''),
+  category: z.string().optional().default(''),
+  name: z.string().optional().default(''),
+  ingredients: z.array(ingredientSchema).default([]),
+  steps: z.array(stepSchema).default([]),
+})
+
+const variationAiSchema = z.object({
+  name: z.string().optional().default(''),
+  ingredients: z.array(ingredientSchema).default([]),
+  steps: z.array(stepSchema).default([]),
+})
+
 export async function POST(req: NextRequest) {
-  const { text, mode } = await req.json()
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+  const { text, mode } = body as Record<string, unknown>
+
+  if (mode !== 'dish' && mode !== 'variation') {
+    return NextResponse.json({ error: 'mode は dish または variation のいずれかです' }, { status: 400 })
+  }
   if (!text || typeof text !== 'string') {
     return NextResponse.json({ error: 'text is required' }, { status: 400 })
   }
@@ -53,9 +78,20 @@ ${text}`
     let responseText = result.response.text().trim()
     // 念のためコードブロック記号を除去
     responseText = responseText.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```$/, '').trim()
-    const parsed = JSON.parse(responseText)
-    return NextResponse.json(parsed)
-  } catch {
-    return NextResponse.json({ error: 'パースに失敗しました' }, { status: 500 })
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(responseText)
+    } catch {
+      return NextResponse.json({ error: 'AIの応答をJSONに変換できませんでした' }, { status: 502 })
+    }
+    const schema = isDish ? dishAiSchema : variationAiSchema
+    const validated = schema.safeParse(parsed)
+    if (!validated.success) {
+      return NextResponse.json({ error: 'AIの応答形式が不正です' }, { status: 502 })
+    }
+    return NextResponse.json(validated.data)
+  } catch (e) {
+    console.error('Gemini API error:', e)
+    return NextResponse.json({ error: 'AI APIの呼び出しに失敗しました' }, { status: 502 })
   }
 }

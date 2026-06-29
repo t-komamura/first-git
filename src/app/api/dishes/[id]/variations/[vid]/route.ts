@@ -18,7 +18,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 // PATCH /api/dishes/[id]/variations/[vid] — 部分更新（rating だけ等もOK）
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string; vid: string }> }) {
   const { id, vid } = await params
-  const body = await req.json()
+  let body: unknown
+  try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
   const parsed = variationUpdateSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })

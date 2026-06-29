@@ -27,6 +27,7 @@ export default function VariationForm({ dishId, initial }: VariationFormProps) {
   const router = useRouter()
   const [state, setState] = useState<VariationState>(toState(initial))
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   function handleParsed(data: Record<string, unknown>) {
     setState(s => ({
@@ -40,6 +41,7 @@ export default function VariationForm({ dishId, initial }: VariationFormProps) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    setError('')
     const payload = {
       name: state.name,
       rating: state.rating || null,
@@ -58,7 +60,7 @@ export default function VariationForm({ dishId, initial }: VariationFormProps) {
       router.push(`/dishes/${dishId}`)
       router.refresh()
     } catch {
-      alert('保存に失敗しました')
+      setError('保存に失敗しました。もう一度お試しください。')
       setSaving(false)
     }
   }
@@ -75,6 +77,7 @@ export default function VariationForm({ dishId, initial }: VariationFormProps) {
       >
         {saving ? '保存中...' : initial ? '更新する' : '保存する'}
       </button>
+      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
     </form>
   )
 }

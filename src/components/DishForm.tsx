@@ -14,6 +14,7 @@ export default function DishForm({ hideAi = false }: { hideAi?: boolean }) {
   const [category, setCategory] = useState('')
   const [variation, setVariation] = useState<VariationState>(emptyVariation())
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   function handleParsed(data: Record<string, unknown>) {
     if (typeof data.title === 'string') setTitle(data.title)
@@ -29,6 +30,7 @@ export default function DishForm({ hideAi = false }: { hideAi?: boolean }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    setError('')
     try {
       const dishRes = await fetch('/api/dishes', {
         method: 'POST',
@@ -53,7 +55,7 @@ export default function DishForm({ hideAi = false }: { hideAi?: boolean }) {
       router.push(`/dishes/${dish.id}`)
       router.refresh()
     } catch {
-      alert('保存に失敗しました')
+      setError('保存に失敗しました。もう一度お試しください。')
       setSaving(false)
     }
   }
@@ -88,6 +90,7 @@ export default function DishForm({ hideAi = false }: { hideAi?: boolean }) {
       >
         {saving ? '保存中...' : '保存する'}
       </button>
+      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
     </form>
   )
 }

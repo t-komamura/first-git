@@ -16,7 +16,11 @@ export default function DishDetailPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`/api/dishes/${id}`).then(r => r.json()).then(d => { setDish(d); setLoading(false) })
+    fetch(`/api/dishes/${id}`)
+      .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json() })
+      .then(d => setDish(d))
+      .catch(() => setDish(null))
+      .finally(() => setLoading(false))
   }, [id])
 
   async function handleDelete() {
@@ -27,14 +31,19 @@ export default function DishDetailPage() {
   }
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400" style={{ backgroundColor: '#FFF8F0' }}>読み込み中...</div>
-  if (!dish || 'error' in dish) return <div className="min-h-screen flex items-center justify-center text-gray-400" style={{ backgroundColor: '#FFF8F0' }}>見つかりませんでした</div>
+  if (!dish) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3" style={{ backgroundColor: '#FFF8F0' }}>
+      <p className="text-gray-500">見つかりませんでした</p>
+      <Link href="/" style={{ color: '#C2410C' }} className="font-semibold">← ホームに戻る</Link>
+    </div>
+  )
 
   return (
     <main className="min-h-screen" style={{ backgroundColor: '#FFF8F0' }}>
       <div className="max-w-2xl mx-auto px-4 pt-6" style={{ paddingBottom: 96 }}>
         <div className="flex items-start justify-between gap-2 mb-1">
           <div className="flex items-start gap-3">
-            <Link href="/" className="text-2xl mt-1" style={{ color: '#C2410C' }}>←</Link>
+            <Link href="/" className="text-sm font-semibold mt-1.5" style={{ color: '#C2410C' }}>← ホーム</Link>
             <div>
               <h1 className="text-2xl font-bold text-gray-800">{emojiFor(dish.category)} {dish.title}</h1>
               {dish.category && (
@@ -44,7 +53,7 @@ export default function DishDetailPage() {
               )}
             </div>
           </div>
-          <button onClick={handleDelete} className="text-sm text-red-400 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 shrink-0">削除</button>
+          <button onClick={handleDelete} className="text-sm text-red-400 border border-red-200 px-3 py-2.5 rounded-lg hover:bg-red-50 shrink-0">削除</button>
         </div>
 
         <div className="mt-6 space-y-3">

@@ -10,7 +10,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const [dish] = await db.select().from(dishes).where(eq(dishes.id, id))
   if (!dish) return NextResponse.json({ error: 'Dish not found' }, { status: 404 })
 
-  const body = await req.json()
+  let body: unknown
+  try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
   const parsed = variationCreateSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
